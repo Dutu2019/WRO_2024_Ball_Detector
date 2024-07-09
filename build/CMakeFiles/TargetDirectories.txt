@@ -1,0 +1,3 @@
+D:/Projects/WRO_2024_Ball_Detector/build/CMakeFiles/app.dir
+D:/Projects/WRO_2024_Ball_Detector/build/CMakeFiles/edit_cache.dir
+D:/Projects/WRO_2024_Ball_Detector/build/CMakeFiles/rebuild_cache.dir

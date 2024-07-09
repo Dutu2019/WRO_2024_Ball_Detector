@@ -1,0 +1,8 @@
+[
+{
+  "directory": "D:/Projects/WRO_2024_Ball_Detector/build",
+  "command": "C:/msys64/mingw64/bin/g++.exe  @CMakeFiles/app.dir/includes_CXX.rsp -g -o CMakeFiles/app.dir/sources/main.cpp.obj -c D:/Projects/WRO_2024_Ball_Detector/sources/main.cpp",
+  "file": "D:/Projects/WRO_2024_Ball_Detector/sources/main.cpp",
+  "output": "CMakeFiles/app.dir/sources/main.cpp.obj"
+}
+]
