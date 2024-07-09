@@ -51,7 +51,6 @@ int main(int argc, char **argv) {
         }
 
         incrementFrame();
-        cv::imshow("Live", colorFrame);
         if (cv::waitKey(1) >= 0) break;
     }
     camera.release();
