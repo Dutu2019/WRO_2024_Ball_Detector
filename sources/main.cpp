@@ -1,30 +1,35 @@
 #include <stdio.h>
 #include <iostream>
+#include <thread>
 #include <chrono>
+#include "mongoose.h"
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 using namespace std;
 
-float distance(float x1, float x2, float y1, float y2);
+void HTTPServer();
+static void ev_handler(struct mg_connection *c, int ev, void *ev_data);
 void incrementFrame();
+float distance(float x1, float x2, float y1, float y2);
+
+// For HTTP Server
+struct mg_mgr mgr;
 
 int frameCount = 0;
 auto frameStart = chrono::high_resolution_clock::now();
+cv::Mat colorFrame, hsvFrame, mask;
 int main(int argc, char **argv) {
-    int frameWidth = 48;
-    int frameHeight = 48;
-
     cv::Scalar orangeLow = cv::Scalar(33.0 / 2.0, 70.0 / 100.0 * 255, 50.0 / 100.0 * 255);
     cv::Scalar orangeHigh = cv::Scalar(42.0 / 2.0, 100.0 / 100.0 * 255, 100.0 / 100.0 * 255);
-    cv::Mat colorFrame, hsvFrame, mask;
     cv::VideoCapture camera;
     camera.open(0);
 
      //--- GRAB AND WRITE LOOP
     cout << "Start grabbing" << endl
     << "Press any key to terminate" << endl;
+    std::thread httpServer(HTTPServer);
 
     for (;;)
     {   
@@ -51,8 +56,10 @@ int main(int argc, char **argv) {
         }
 
         incrementFrame();
+        cv::imshow("Live", colorFrame);
         if (cv::waitKey(1) >= 0) break;
     }
+    mg_mgr_free(&mgr);
     camera.release();
     cv::destroyAllWindows();
     return 0;
@@ -67,6 +74,48 @@ void incrementFrame() {
         frameStart = stop;
     }
     frameCount++;
+}
+
+void HTTPServer() {
+    // Initialize Mongoose server
+    mg_mgr_init(&mgr);
+
+    const char *url = "http://10.2.10.51:8000";
+    struct mg_connection *c = mg_http_listen(&mgr, url, (mg_event_handler_t) ev_handler, NULL);
+    if (c == NULL) {
+        std::cerr << "Error: Cannot start server on port " << url << std::endl;
+    }
+
+    // Enter Mongoose event loop
+    while (true) {
+        mg_mgr_poll(&mgr, 1000);
+    }
+}
+
+// Function to handle HTTP requests
+static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
+    if (ev == MG_EV_HTTP_MSG) {
+        struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+
+        // Check if the request is for the frame buffer
+        if (mg_match(hm->uri, mg_str("/frame"), NULL)) {
+            std::vector<uchar> buf;
+            cv::imencode(".jpg", colorFrame, buf);  // Encode cv::Mat to JPEG
+            std::string jpeg_data(buf.begin(), buf.end());
+
+            // Create and send the HTTP response with explicit content length
+            mg_printf(c,
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: image/jpeg\r\n"
+                "Content-Length: %d\r\n"
+                "\r\n", (int)jpeg_data.size());
+            mg_send(c, jpeg_data.data(), jpeg_data.size());
+            
+        } else {
+            // Handle other requests or send a 404 Not Found response
+            mg_http_reply(c, 404, "", "Not Found");
+        }
+    }
 }
 
 float distance(float x1, float x2, float y1, float y2) {

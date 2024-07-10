@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "D:/Projects/WRO_2024_Ball_Detector/sources/mongoose.c" "CMakeFiles/app.dir/sources/mongoose.c.obj" "gcc" "CMakeFiles/app.dir/sources/mongoose.c.obj.d"
   "D:/Projects/WRO_2024_Ball_Detector/sources/main.cpp" "CMakeFiles/app.dir/sources/main.cpp.obj" "gcc" "CMakeFiles/app.dir/sources/main.cpp.obj.d"
   )
 

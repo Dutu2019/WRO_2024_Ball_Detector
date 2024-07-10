@@ -153,6 +153,30 @@ sources/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/sources/main.cpp.s
 .PHONY : sources/main.cpp.s
 
+sources/mongoose.obj: sources/mongoose.c.obj
+.PHONY : sources/mongoose.obj
+
+# target to build an object file
+sources/mongoose.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/sources/mongoose.c.obj
+.PHONY : sources/mongoose.c.obj
+
+sources/mongoose.i: sources/mongoose.c.i
+.PHONY : sources/mongoose.i
+
+# target to preprocess a source file
+sources/mongoose.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/sources/mongoose.c.i
+.PHONY : sources/mongoose.c.i
+
+sources/mongoose.s: sources/mongoose.c.s
+.PHONY : sources/mongoose.s
+
+# target to generate assembly for a file
+sources/mongoose.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/app.dir/build.make CMakeFiles/app.dir/sources/mongoose.c.s
+.PHONY : sources/mongoose.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -165,6 +189,9 @@ help:
 	@echo "... sources/main.obj"
 	@echo "... sources/main.i"
 	@echo "... sources/main.s"
+	@echo "... sources/mongoose.obj"
+	@echo "... sources/mongoose.i"
+	@echo "... sources/mongoose.s"
 .PHONY : help
 
 

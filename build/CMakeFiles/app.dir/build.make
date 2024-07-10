@@ -84,14 +84,31 @@ CMakeFiles/app.dir/sources/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/app.dir/sources/main.cpp.s"
 	C:/msys64/mingw64/bin/g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:/Projects/WRO_2024_Ball_Detector/sources/main.cpp -o CMakeFiles/app.dir/sources/main.cpp.s
 
+CMakeFiles/app.dir/sources/mongoose.c.obj: CMakeFiles/app.dir/flags.make
+CMakeFiles/app.dir/sources/mongoose.c.obj: CMakeFiles/app.dir/includes_C.rsp
+CMakeFiles/app.dir/sources/mongoose.c.obj: D:/Projects/WRO_2024_Ball_Detector/sources/mongoose.c
+CMakeFiles/app.dir/sources/mongoose.c.obj: CMakeFiles/app.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:/Projects/WRO_2024_Ball_Detector/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/app.dir/sources/mongoose.c.obj"
+	C:/msys64/mingw64/bin/gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/app.dir/sources/mongoose.c.obj -MF CMakeFiles/app.dir/sources/mongoose.c.obj.d -o CMakeFiles/app.dir/sources/mongoose.c.obj -c D:/Projects/WRO_2024_Ball_Detector/sources/mongoose.c
+
+CMakeFiles/app.dir/sources/mongoose.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/app.dir/sources/mongoose.c.i"
+	C:/msys64/mingw64/bin/gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E D:/Projects/WRO_2024_Ball_Detector/sources/mongoose.c > CMakeFiles/app.dir/sources/mongoose.c.i
+
+CMakeFiles/app.dir/sources/mongoose.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/app.dir/sources/mongoose.c.s"
+	C:/msys64/mingw64/bin/gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S D:/Projects/WRO_2024_Ball_Detector/sources/mongoose.c -o CMakeFiles/app.dir/sources/mongoose.c.s
+
 # Object files for target app
 app_OBJECTS = \
-"CMakeFiles/app.dir/sources/main.cpp.obj"
+"CMakeFiles/app.dir/sources/main.cpp.obj" \
+"CMakeFiles/app.dir/sources/mongoose.c.obj"
 
 # External object files for target app
 app_EXTERNAL_OBJECTS =
 
 app.exe: CMakeFiles/app.dir/sources/main.cpp.obj
+app.exe: CMakeFiles/app.dir/sources/mongoose.c.obj
 app.exe: CMakeFiles/app.dir/build.make
 app.exe: D:/Libs/opencv/x64/mingw/lib/libopencv_gapi455.dll.a
 app.exe: D:/Libs/opencv/x64/mingw/lib/libopencv_highgui455.dll.a
@@ -110,7 +127,7 @@ app.exe: D:/Libs/opencv/x64/mingw/lib/libopencv_imgproc455.dll.a
 app.exe: D:/Libs/opencv/x64/mingw/lib/libopencv_core455.dll.a
 app.exe: CMakeFiles/app.dir/linkLibs.rsp
 app.exe: CMakeFiles/app.dir/objects1.rsp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=D:/Projects/WRO_2024_Ball_Detector/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable app.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=D:/Projects/WRO_2024_Ball_Detector/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable app.exe"
 	"C:/Program Files/CMake/bin/cmake.exe" -E rm -f CMakeFiles/app.dir/objects.a
 	C:/msys64/mingw64/bin/ar.exe qc CMakeFiles/app.dir/objects.a @CMakeFiles/app.dir/objects1.rsp
 	C:/msys64/mingw64/bin/g++.exe -g -Wl,--whole-archive CMakeFiles/app.dir/objects.a -Wl,--no-whole-archive -o app.exe -Wl,--out-implib,libapp.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/app.dir/linkLibs.rsp
