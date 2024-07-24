@@ -1,1 +1,1 @@
-This is the code for a Ball Tracking software. It uses OpenCV to detect pixels of a specific range of colors and then draws a bounding box around them. It also serves the video stream on a URL as this is supposed to run on a Raspberry Pi Zero 2 W, which has no display.
+This is the code for a Ping Pong ball tracking software. It uses OpenCV to detect pixels of a specific range of colors and then draws a bounding box around them. It also serves the video stream on a URL as this is supposed to run on a Raspberry Pi Zero 2 W, which has no display.
