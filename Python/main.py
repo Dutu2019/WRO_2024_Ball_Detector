@@ -69,7 +69,6 @@ def main() -> None:
                 cv.rectangle(colorFrame, (x, y), (x+w, y+h), (0, 255, 0), 3)
         
         incrementFrames()
-        cv.imshow("Live", colorFrame)
         if cv.waitKey(1) >= 0: break
 
 
