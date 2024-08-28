@@ -7,9 +7,15 @@ colorFrame = None
 lastFrameTimestamp = time.perf_counter()
 numFrames = 0
 
-class Server(sr.BaseHTTPRequestHandler):
+ip = "0.0.0.0"
+port = 8000
+
+class Server(sr.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/stream':
+        if self.path == '/':
+            self.path = '/index.html'
+            return sr.SimpleHTTPRequestHandler.do_GET(self)
+        elif self.path == '/stream':
             self.send_response(200)
             self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=frame')
             self.end_headers()
@@ -31,6 +37,26 @@ class Server(sr.BaseHTTPRequestHandler):
                     break
         else:
             self.send_error(404, "File not found")
+    
+    def do_POST(self):
+        if self.path == '/':
+            print(self.headers)
+            content_length = int(self.headers['Content-Length'])
+            if content_length > 0:
+                post_data_bytes = self.rfile.read(content_length)
+
+                post_data_str = post_data_bytes.decode("UTF-8")
+                list_of_post_data = post_data_str.split('&')
+                
+                post_data_dict = {}
+                for item in list_of_post_data:
+                    variable, value = item.split('=')
+                    post_data_dict[variable] = value
+                
+                print(post_data_dict)
+            self.send_response(301)
+            self.send_header("Location", "/")
+            self.end_headers()
 
 def incrementFrames() -> None:
     global lastFrameTimestamp, numFrames
@@ -73,8 +99,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    server = sr.HTTPServer(("0.0.0.0", 8000), Server)
-    server_thread = threading.Thread(target=server.serve_forever)
-    server_thread.daemon = True
-    server_thread.start()
-    main()
+    server = sr.HTTPServer((ip, port), Server)
+    # server_thread = threading.Thread(target=server.serve_forever)
+    # server_thread.daemon = True
+    # server_thread.start()
+    # main()
+    server.serve_forever()
