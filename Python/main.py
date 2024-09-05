@@ -1,7 +1,8 @@
 import cv2 as cv
 import numpy as np
 import http.server as sr
-import time, threading, pigpio, json
+import time, json, threading
+# import pigpio
 
 colorFrame = None
 lastFrameTimestamp = time.perf_counter()
@@ -100,9 +101,14 @@ def incrementFrames() -> None:
         numFrames = 0
         lastFrameTimestamp = time.perf_counter()
 
+def calibrate_camera(camera: cv.VideoCapture) -> None:
+    camera.set(cv.CAP_PROP_AUTO_WB, 0)
+    camera.set(cv.CAP_PROP_WB_TEMPERATURE, 2500)
+
 def main() -> None:
     global colorFrame, ball_coords
     camera = cv.VideoCapture(0)
+    calibrate_camera(camera)
 
     while True:
         if not camera.isOpened():
@@ -137,16 +143,15 @@ def i2c_callback(id, tick):
                 pi.bsc_i2c(I2C_ADDR, "NULL")
 
 if __name__ == "__main__":
+    # pi = pigpio.pi()
+    # pi.set_pull_up_down(SDA, pigpio.PUD_UP)
+    # pi.set_pull_up_down(SCL, pigpio.PUD_UP)
+    # pi.event_callback(pigpio.EVENT_BSC, i2c_callback)
+    # pi.bsc_i2c(I2C_ADDR)
+    # print("I2C active")
+
     server = sr.HTTPServer(("0.0.0.0", 8000), Server)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
-
-    pi = pigpio.pi()
-    pi.set_pull_up_down(SDA, pigpio.PUD_UP)
-    pi.set_pull_up_down(SCL, pigpio.PUD_UP)
-    pi.event_callback(pigpio.EVENT_BSC, i2c_callback)
-    pi.bsc_i2c(I2C_ADDR)
-    print("I2C active")
-
     main()
