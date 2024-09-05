@@ -13,9 +13,11 @@ try:
         obj = json.load(file)
         orangeLow = obj["orangeLow"]
         orangeHigh = obj["orangeHigh"]
+        temperature = obj["temperature"]
 except Exception:
     orangeLow = [0, 0, 0]
     orangeHigh = [0, 0, 0]
+    temperature = 0
 orangeLowOpenCV   = np.array(( orangeLow[0] / 2, orangeLow[1] / 100 * 255, orangeLow[2] / 100 * 255), dtype=np.uint8, ndmin=1)
 orangeHighOpenCV   = np.array(( orangeHigh[0] / 2, orangeHigh[1] / 100 * 255, orangeHigh[2] / 100 * 255), dtype=np.uint8, ndmin=1)
 
@@ -60,7 +62,7 @@ class Server(sr.SimpleHTTPRequestHandler):
             self.send_error(404, "File not found")
     
     def do_POST(self):
-        global orangeLow, orangeHigh, orangeLowOpenCV, orangeHighOpenCV
+        global orangeLow, orangeHigh, orangeLowOpenCV, orangeHighOpenCV, temperature
         if self.path == '/':
             content_length = int(self.headers['Content-Length'])
             if content_length > 0:
@@ -74,7 +76,7 @@ class Server(sr.SimpleHTTPRequestHandler):
                     variable, value = item.split('=')
                     post_data_dict[variable] = value
                 
-            if len(post_data_dict) == 6:
+            if len(post_data_dict) == 7:
                 orangeLow = [
                     float(post_data_dict["H_low"]),
                     float(post_data_dict["S_low"]),
@@ -85,10 +87,11 @@ class Server(sr.SimpleHTTPRequestHandler):
                     float(post_data_dict["S_high"]),
                     float(post_data_dict["V_high"]),
                 ]
+                temperature = int(post_data_dict["temperature"])
                 orangeLowOpenCV = np.array(( orangeLow[0] / 2, orangeLow[1] / 100 * 255, orangeLow[2] / 100 * 255), dtype=np.uint8, ndmin=1)
                 orangeHighOpenCV = np.array(( orangeHigh[0] / 2, orangeHigh[1] / 100 * 255, orangeHigh[2] / 100 * 255), dtype=np.uint8, ndmin=1)
                 with open("HSV.json", "w") as file:
-                    json.dump({"orangeLow": orangeLow, "orangeHigh": orangeHigh}, file)
+                    json.dump({"orangeLow": orangeLow, "orangeHigh": orangeHigh, "temperature": temperature}, file)
             self.send_response(301)
             self.send_header("Location", "/")
             self.end_headers()
@@ -103,7 +106,7 @@ def incrementFrames() -> None:
 
 def calibrate_camera(camera: cv.VideoCapture) -> None:
     camera.set(cv.CAP_PROP_AUTO_WB, 0)
-    camera.set(cv.CAP_PROP_WB_TEMPERATURE, 2500)
+    camera.set(cv.CAP_PROP_WB_TEMPERATURE, temperature)
 
 def main() -> None:
     global colorFrame, ball_coords
@@ -151,7 +154,7 @@ if __name__ == "__main__":
     # pi.bsc_i2c(I2C_ADDR)
     # print("I2C active")
 
-    server = sr.HTTPServer(("0.0.0.0", 8000), Server)
+    server = sr.HTTPServer((ip, port), Server)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
