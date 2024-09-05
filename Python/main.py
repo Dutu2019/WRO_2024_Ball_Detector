@@ -71,10 +71,10 @@ def main() -> None:
     # orangeLow = [33, 70, 50]
     # orangeHigh = [42, 100, 100]
     orangeLow = [20, 70, 50]
-    orangeHigh = [29, 100, 100]
+    orangeHigh = [50, 100, 100]
     orangeLowOpenCV   = np.array(( orangeLow[0] / 2, orangeLow[1] / 100 * 255, orangeLow[2] / 100 * 255), dtype=np.uint8, ndmin=1)
     orangeHighOpenCV   = np.array(( orangeHigh[0] / 2, orangeHigh[1] / 100 * 255, orangeHigh[2] / 100 * 255), dtype=np.uint8, ndmin=1)
-    camera = cv.VideoCapture(0)
+    camera = cv.VideoCapture(1)
 
     while True:
         if not camera.isOpened():
@@ -95,13 +95,9 @@ def main() -> None:
                 cv.rectangle(colorFrame, (x, y), (x+w, y+h), (0, 255, 0), 3)
         
         incrementFrames()
+        cv.imshow("win", colorFrame)
         if cv.waitKey(1) >= 0: break
 
 
 if __name__ == "__main__":
-    server = sr.HTTPServer((ip, port), Server)
-    # server_thread = threading.Thread(target=server.serve_forever)
-    # server_thread.daemon = True
-    # server_thread.start()
-    # main()
-    server.serve_forever()
+    main()
