@@ -2,11 +2,13 @@ import cv2 as cv
 import numpy as np
 import http.server as sr
 import time, json, threading
-# import pigpio
+from sys import platform
 
+if platform == "linux":
+    import pigpio
+
+camera = cv.VideoCapture(0)
 colorFrame = None
-lastFrameTimestamp = time.perf_counter()
-numFrames = 0
 
 try:
     with open("HSV.json", "r") as file:
@@ -87,15 +89,20 @@ class Server(sr.SimpleHTTPRequestHandler):
                     float(post_data_dict["S_high"]),
                     float(post_data_dict["V_high"]),
                 ]
-                temperature = int(post_data_dict["temperature"])
                 orangeLowOpenCV = np.array(( orangeLow[0] / 2, orangeLow[1] / 100 * 255, orangeLow[2] / 100 * 255), dtype=np.uint8, ndmin=1)
                 orangeHighOpenCV = np.array(( orangeHigh[0] / 2, orangeHigh[1] / 100 * 255, orangeHigh[2] / 100 * 255), dtype=np.uint8, ndmin=1)
+
+                temperature = int(post_data_dict["temperature"])
+                calibrate_camera(camera)
+
                 with open("HSV.json", "w") as file:
                     json.dump({"orangeLow": orangeLow, "orangeHigh": orangeHigh, "temperature": temperature}, file)
             self.send_response(301)
             self.send_header("Location", "/")
             self.end_headers()
 
+numFrames = 0
+lastFrameTimestamp = time.perf_counter()
 def incrementFrames() -> None:
     global lastFrameTimestamp, numFrames
     numFrames += 1
@@ -105,13 +112,17 @@ def incrementFrames() -> None:
         lastFrameTimestamp = time.perf_counter()
 
 def calibrate_camera(camera: cv.VideoCapture) -> None:
+    camera.set(cv.CAP_PROP_FRAME_WIDTH, 600)
+    camera.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
     camera.set(cv.CAP_PROP_AUTO_WB, 0)
     camera.set(cv.CAP_PROP_WB_TEMPERATURE, temperature)
+    camera.set(cv.CAP_PROP_SATURATION, 200)
+    camera.set(cv.CAP_PROP_APERTURE, 1.4)
 
 def main() -> None:
     global colorFrame, ball_coords
-    camera = cv.VideoCapture(0)
     calibrate_camera(camera)
+
 
     while True:
         if not camera.isOpened():
@@ -133,7 +144,6 @@ def main() -> None:
                 ball_coords.append((x, y))
         
         incrementFrames()
-        cv.imshow("win", colorFrame)
         if cv.waitKey(1) >= 0: break
 
 def i2c_callback(id, tick):
@@ -147,15 +157,16 @@ def i2c_callback(id, tick):
                 pi.bsc_i2c(I2C_ADDR, "NULL")
 
 if __name__ == "__main__":
-    # pi = pigpio.pi()
-    # pi.set_pull_up_down(SDA, pigpio.PUD_UP)
-    # pi.set_pull_up_down(SCL, pigpio.PUD_UP)
-    # pi.event_callback(pigpio.EVENT_BSC, i2c_callback)
-    # pi.bsc_i2c(I2C_ADDR)
-    # print("I2C active")
+    if platform == "linux":
+        pi = pigpio.pi()
+        pi.set_pull_up_down(SDA, pigpio.PUD_UP)
+        pi.set_pull_up_down(SCL, pigpio.PUD_UP)
+        pi.event_callback(pigpio.EVENT_BSC, i2c_callback)
+        pi.bsc_i2c(I2C_ADDR)
+        print("I2C active")
 
-    server = sr.HTTPServer((ip, port), Server)
-    server_thread = threading.Thread(target=server.serve_forever)
-    server_thread.daemon = True
-    server_thread.start()
+    # server = sr.HTTPServer((ip, port), Server)
+    # server_thread = threading.Thread(target=server.serve_forever)
+    # server_thread.daemon = True
+    # server_thread.start()
     main()

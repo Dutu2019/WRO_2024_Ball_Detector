@@ -21,13 +21,15 @@ class Robot():
     def __init__(self) -> None:
         # Global variables
         self.FOV_width = 600
-        self.FOV_height = 500
-        self.max_speed = 200
+        self.FOV_height = 600
+        self.max_speed = 400
         self.ball_coords = []
+        self.search_countdown = time.perf_counter()
         self.ev3 = EV3Brick()
         self.rpi = I2CDevice(Port.S1, 0x12)
         self.LMotor = Motor(Port.A)
         self.RMotor = Motor(Port.B)
+        self.MMotor = Motor(Port.C)
         print("Connected to device ")
     
     def extract_coords(self, rx: bytes) -> tuple|None:
@@ -51,11 +53,10 @@ class Robot():
 
     def set_ball_coords(self) -> None:
         try_again = 0
-        while try_again < 5:
+        while try_again < 3:
             try:
                 self.rpi.write(0, b't')
-                RPI_bytes = self.rpi.read(0, 8)
-                ball_coords = self.extract_coords(RPI_bytes)
+                ball_coords = self.extract_coords(self.rpi.read(0, 8))
                 if ball_coords:
                     if ball_coords[0] < self.FOV_width and ball_coords[1] < self.FOV_height:
                         self.ball_coords = ball_coords
@@ -68,11 +69,17 @@ class Robot():
     
     def update_motors(self) -> None:
         if len(self.ball_coords) > 0:
-            self.LMotor.run(self.max_speed * (self.ball_coords[0]/self.FOV_width)**2)
-            self.RMotor.run(self.max_speed * (1 - self.ball_coords[0]/self.FOV_width)**2)
-        else:
-            self.LMotor.brake()
-            self.RMotor.brake()
+            if robot.ball_coords[1] > 11/12 * robot.FOV_height:
+                robot.RMotor.run(-360)
+                robot.LMotor.run(-360)
+                time.sleep(1)
+            else:
+                self.search_countdown = time.perf_counter()
+                self.LMotor.run(-self.max_speed * (self.ball_coords[0]/self.FOV_width))
+                self.RMotor.run(-self.max_speed * (1 - self.ball_coords[0]/self.FOV_width))
+        elif time.perf_counter() - self.search_countdown > .5:
+            self.LMotor.run(-100)
+            self.RMotor.run(100)
 
 def incrementFrames() -> None:
     global lastFrameTimestamp, numFrames
@@ -84,11 +91,8 @@ def incrementFrames() -> None:
 
 if __name__ == "__main__":
     robot = Robot()
+    robot.MMotor.run(-360)
     while True:
         robot.set_ball_coords()
-        if robot.ball_coords[1] > 5/6 * robot.FOV_height:
-            # Spin meduim motor
-            robot.RMotor.run_angle(robot.max_speed//2, 180, wait=False)
-            robot.LMotor.run_angle(robot.max_speed//2)
         robot.update_motors()
         # incrementFrames()
