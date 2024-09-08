@@ -26,6 +26,7 @@ orangeHighOpenCV   = np.array(( orangeHigh[0] / 2, orangeHigh[1] / 100 * 255, or
 ip = "0.0.0.0"
 port = 8000
 ball_coords = []
+lock = threading.Lock()
 
 I2C_ADDR = 0x12
 SDA = 18
@@ -112,12 +113,14 @@ def incrementFrames() -> None:
         lastFrameTimestamp = time.perf_counter()
 
 def calibrate_camera(camera: cv.VideoCapture) -> None:
-    camera.set(cv.CAP_PROP_FRAME_WIDTH, 600)
-    camera.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
-    camera.set(cv.CAP_PROP_AUTO_WB, 0)
-    camera.set(cv.CAP_PROP_WB_TEMPERATURE, temperature)
-    camera.set(cv.CAP_PROP_SATURATION, 200)
-    camera.set(cv.CAP_PROP_APERTURE, 1.4)
+    with lock:
+        camera.set(cv.CAP_PROP_FRAME_WIDTH, 600)
+        camera.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
+        camera.set(cv.CAP_PROP_AUTO_WB, 1)
+        # camera.set(cv.CAP_PROP_AUTO_WB, 0)
+        # camera.set(cv.CAP_PROP_WB_TEMPERATURE, temperature)
+        camera.set(cv.CAP_PROP_SATURATION, 200)
+        camera.set(cv.CAP_PROP_APERTURE, 8)
 
 def main() -> None:
     global colorFrame, ball_coords
@@ -125,26 +128,25 @@ def main() -> None:
 
 
     while True:
-        if not camera.isOpened():
-            print("Cannot open camera")
-            break
+        with lock:
+            if not camera.isOpened():
+                print("Cannot open camera")
+                break
+            ret, colorFrame = camera.read()
+            colorFrame = cv.GaussianBlur(colorFrame, (17, 17), 1.3, sigmaY=0.0)
+            hsvFrame = cv.cvtColor(colorFrame, cv.COLOR_BGR2HSV)
 
-        ret, colorFrame = camera.read()
-        colorFrame = cv.GaussianBlur(colorFrame, (17, 17), 1.3, sigmaY=0.0)
-        hsvFrame = cv.cvtColor(colorFrame, cv.COLOR_BGR2HSV)
-
-        # Get Bounding boxes of balls
-        mask = cv.inRange(hsvFrame, orangeLowOpenCV, orangeHighOpenCV)
-        contours, src = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        ball_coords = []
-        for contour in contours:
-            x, y, w, h = cv.boundingRect(contour)
-            if w * h > 270:
-                cv.rectangle(colorFrame, (x, y), (x+w, y+h), (0, 255, 0), 3)
-                ball_coords.append((x, y))
-        
-        incrementFrames()
-        if cv.waitKey(1) >= 0: break
+            # Get Bounding boxes of balls
+            mask = cv.inRange(hsvFrame, orangeLowOpenCV, orangeHighOpenCV)
+            contours, src = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            ball_coords = []
+            for contour in contours:
+                x, y, w, h = cv.boundingRect(contour)
+                if w * h > 270:
+                    cv.rectangle(colorFrame, (x, y), (x+w, y+h), (0, 255, 0), 3)
+                    ball_coords.append((x, y))
+            
+            incrementFrames()
 
 def i2c_callback(id, tick):
     global pi
@@ -165,8 +167,8 @@ if __name__ == "__main__":
         pi.bsc_i2c(I2C_ADDR)
         print("I2C active")
 
-    # server = sr.HTTPServer((ip, port), Server)
-    # server_thread = threading.Thread(target=server.serve_forever)
-    # server_thread.daemon = True
-    # server_thread.start()
+    server = sr.HTTPServer((ip, port), Server)
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
     main()
