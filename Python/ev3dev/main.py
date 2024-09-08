@@ -24,6 +24,8 @@ class Robot():
         self.FOV_height = 480
         self.max_speed = 500
 
+        self.scout_speed = 60
+        self.scout_last_change = 70
         self.search_speed = 100
         self.search_countdown = time.perf_counter()
         self.search_countdown_is_set = False
@@ -104,11 +106,10 @@ class Robot():
                     self.return_angles.append(self.Gyro.angle())
                     self.chase_start_times.append(time.perf_counter())
         else:
-            self.LMotor.stop()
-            self.RMotor.stop()
+            self.search_ball()
     
     def turnAngle(self, angle) -> None:
-        while not (self.Gyro.angle() > angle-7 and self.Gyro.angle() < angle+7):
+        while not (self.Gyro.angle() > angle-5 and self.Gyro.angle() < angle+5):
             self.run_motors(
                 -self.max_speed * (angle-self.Gyro.angle())/60,
                 -self.max_speed * (self.Gyro.angle()-angle)/60
@@ -118,14 +119,18 @@ class Robot():
 
     def throw_ball(self) -> None:
         self.chase_end_times.append(time.perf_counter())
-        robot.MMotor.run(-180)
+        self.MMotor.run(-120)
         self.LMotor.run_angle(-self.max_speed//2, 180, wait=False)
         self.RMotor.run_angle(-self.max_speed//2, 180)
         self.LMotor.run_angle(self.max_speed, 180, wait=False)
         self.RMotor.run_angle(self.max_speed, 180)
         self.turnAngle(30)
-        time.sleep(1.3)
+        self.run_motors(-self.max_speed, -self.max_speed)
+        self.MMotor.run(-500)
+        time.sleep(.6)
         robot.MMotor.stop()
+        self.run_motors(self.max_speed, self.max_speed)
+        time.sleep(.6)
         self.ball_is_close = False
         self.is_chasing = False
         self.return_to_start()
@@ -145,10 +150,17 @@ class Robot():
             self.chase_end_times.append(time.perf_counter())
 
     def search_ball(self) -> None:
-        pass
+        if self.Gyro.angle() > 70 and self.scout_last_change == -70:
+            self.scout_last_change = 70
+            self.scout_speed = -self.scout_speed
+        
+        elif self.Gyro.angle() < -70 and self.scout_last_change == 70:
+            self.scout_last_change = -70
+            self.scout_speed = -self.scout_speed
+        self.LMotor.run(self.scout_speed)
+        self.RMotor.run(-self.scout_speed)
     
     def return_to_start(self) -> None:
-        print("angles:", self.return_angles)
         if len(self.return_angles) == len(self.chase_start_times) and len(self.chase_start_times) == len(self.chase_end_times):
             return_lenth = len(self.return_angles)
             for i in range(return_lenth):
@@ -157,6 +169,8 @@ class Robot():
                 time.sleep(
                     self.chase_end_times[return_lenth-1 - i] - self.chase_start_times[return_lenth-1 - i]
                 )
+            self.LMotor.run_angle(self.max_speed, -30, wait=False)
+            self.RMotor.run_angle(self.max_speed, -30)
             self.return_angles = []
             self.chase_start_times = []
             self.chase_end_times = []
@@ -173,6 +187,8 @@ def incrementFrames() -> None:
 
 if __name__ == "__main__":
     robot = Robot()
+    robot.LMotor.run_angle(robot.max_speed, -30, wait=False)
+    robot.RMotor.run_angle(robot.max_speed, -30)
     while True:
         robot.set_ball_coords()
         if robot.is_chasing:
